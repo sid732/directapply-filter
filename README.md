@@ -7,10 +7,12 @@ DirectApply Filter helps job seekers keep search results focused on roles worth 
 - Automatically hides staffing-agency and third-party job posts.
 - Filters promoted LinkedIn job listings with a dedicated toggle.
 - Supports custom blocklists for companies and job sources you want to avoid.
+- Adds a one-click Block action to LinkedIn job cards.
 - Includes a whitelist for employers that should always stay visible.
+- Adds reason tags so hidden results clearly show why they were filtered.
 - Adds optional placeholders so hidden results can be reviewed or restored.
 - Offers a vanish mode for removing hidden results without placeholder rows.
-- Tracks how many jobs were hidden on each site.
+- Tracks how many jobs were hidden in the current search.
 - Keeps preferences on your device.
 
 ## Built For Job Search
@@ -43,3 +45,4 @@ Your blocklists, whitelist, toggles, and hidden-job counts stay in Chrome storag
 - **Use built-in staffing list**: Apply the included staffing-company filter.
 - **Hide promoted jobs**: Remove promoted LinkedIn listings.
 - **Lists**: Manage custom blocklist, whitelist, and keyword filters.
+- **Block**: Add a company or job source to your blocklist from a LinkedIn job card.

@@ -1,5 +1,5 @@
 const STORAGE_KEY = "directApplySettings";
-const SESSION_KEY = "directApplySessionStats";
+const PAGE_STATS_KEY = "directApplyPageStats";
 
 const enabled = document.querySelector("#enabled");
 const showHiddenPlaceholders = document.querySelector("#showHiddenPlaceholders");
@@ -10,22 +10,17 @@ const hiddenCount = document.querySelector("#hiddenCount");
 const openOptions = document.querySelector("#openOptions");
 const resetStats = document.querySelector("#resetStats");
 
-const getActiveHost = async () => {
+const getActiveStatsKey = async () => {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tabs[0] && tabs[0].url;
-
-  try {
-    return new URL(url).hostname;
-  } catch (_error) {
-    return "";
-  }
+  return window.DirectApplyMatcher.getStatsKey(url);
 };
 
 const getStoredState = async () => {
-  const result = await chrome.storage.local.get([STORAGE_KEY, SESSION_KEY]);
+  const result = await chrome.storage.local.get([STORAGE_KEY, PAGE_STATS_KEY]);
   return {
     settings: window.DirectApplyMatcher.mergeSettings(result[STORAGE_KEY]),
-    stats: result[SESSION_KEY] || {}
+    stats: result[PAGE_STATS_KEY] || {}
   };
 };
 
@@ -40,7 +35,7 @@ const saveSettings = async (patch) => {
 };
 
 const render = async () => {
-  const host = await getActiveHost();
+  const statsKey = await getActiveStatsKey();
   const { settings, stats } = await getStoredState();
 
   enabled.checked = settings.enabled;
@@ -49,7 +44,7 @@ const render = async () => {
   vanishHiddenJobs.checked = settings.vanishHiddenJobs;
   useBuiltInStaffingList.checked = settings.useBuiltInStaffingList;
   hidePromotedJobs.checked = settings.hidePromotedJobs;
-  hiddenCount.textContent = String(host && stats[host] ? stats[host].hidden : 0);
+  hiddenCount.textContent = String(statsKey && stats[statsKey] ? stats[statsKey].hidden : 0);
 };
 
 enabled.addEventListener("change", () => saveSettings({ enabled: enabled.checked }));
@@ -67,16 +62,25 @@ openOptions.addEventListener("click", () => {
 });
 
 resetStats.addEventListener("click", async () => {
-  const host = await getActiveHost();
-  const result = await chrome.storage.local.get([SESSION_KEY]);
-  const stats = result[SESSION_KEY] || {};
+  const statsKey = await getActiveStatsKey();
+  const result = await chrome.storage.local.get([PAGE_STATS_KEY]);
+  const stats = result[PAGE_STATS_KEY] || {};
 
-  if (host) {
-    delete stats[host];
+  if (statsKey) {
+    stats[statsKey] = {
+      hidden: 0,
+      lastUpdated: new Date().toISOString()
+    };
   }
 
-  await chrome.storage.local.set({ [SESSION_KEY]: stats });
+  await chrome.storage.local.set({ [PAGE_STATS_KEY]: stats });
   await render();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && (changes[PAGE_STATS_KEY] || changes[STORAGE_KEY])) {
+    render();
+  }
 });
 
 render();

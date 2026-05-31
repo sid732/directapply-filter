@@ -92,6 +92,17 @@
     keywordFilters: readListSetting(stored, "keywordFilters")
   });
 
+  const getStatsKey = (urlValue) => {
+    try {
+      const url = new URL(urlValue);
+      url.searchParams.delete("currentJobId");
+      url.searchParams.delete("currentJobIdOrigin");
+      return `${url.origin}${url.pathname}${url.search}`;
+    } catch (_error) {
+      return "";
+    }
+  };
+
   const findMatch = ({ companyName, text }, settings, builtInCompanies) => {
     const company = companyName || "";
     const allText = text || "";
@@ -134,6 +145,7 @@
     mergeSettings,
     normalize,
     getSourceSignals,
+    getStatsKey,
     toList
   };
 })();

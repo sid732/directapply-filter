@@ -1,3 +1,61 @@
+.directapply-actionable-job {
+  position: relative;
+}
+
+.directapply-card-tools {
+  align-items: center;
+  display: flex;
+  opacity: 0;
+  position: absolute;
+  right: 44px;
+  top: 10px;
+  transform: translateY(-2px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+  z-index: 3;
+}
+
+.directapply-actionable-job:hover > .directapply-card-tools,
+.directapply-card-tools:focus-within {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.directapply-block-button {
+  appearance: none;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  color: #334155;
+  cursor: pointer;
+  font: 600 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 6px 9px;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 120ms ease;
+}
+
+.directapply-block-button:hover {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #9a3412;
+}
+
+.directapply-block-button:active {
+  transform: translateY(1px);
+}
+
+.directapply-block-button:disabled {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
+  cursor: default;
+}
+
 .directapply-hiding-job {
   opacity: 0 !important;
   pointer-events: none !important;
@@ -24,6 +82,44 @@
   justify-content: space-between;
   margin: 8px 0;
   padding: 10px 12px;
+}
+
+.directapply-placeholder-label {
+  flex: 1;
+}
+
+.directapply-reason-tag {
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  padding: 4px 8px;
+}
+
+.directapply-reason-tag--blocked {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.directapply-reason-tag--staffing {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.directapply-reason-tag--keyword {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.directapply-reason-tag--promoted {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.directapply-reason-tag--filtered {
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .directapply-placeholder button {
@@ -54,6 +150,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .directapply-card-tools,
   .directapply-hiding-job,
   .directapply-placeholder {
     animation: none;

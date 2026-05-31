@@ -1,6 +1,6 @@
 (function () {
   const STORAGE_KEY = "directApplySettings";
-  const SESSION_KEY = "directApplySessionStats";
+  const PAGE_STATS_KEY = "directApplyPageStats";
   const HIDE_ANIMATION_MS = 180;
   const CARD_SELECTOR = [
     "[data-job-id]",
@@ -44,6 +44,7 @@
   let builtInCompanies = [];
   let scanTimer = null;
   let hiddenCards = new WeakMap();
+  let currentStatsKey = "";
 
   const storageGet = (keys) =>
     new Promise((resolve) => {
@@ -54,6 +55,17 @@
     new Promise((resolve) => {
       chrome.storage.local.set(value, resolve);
     });
+
+  const saveSettings = async (patch) => {
+    const result = await storageGet([STORAGE_KEY]);
+    const currentSettings = window.DirectApplyMatcher.mergeSettings(result[STORAGE_KEY]);
+    await storageSet({
+      [STORAGE_KEY]: {
+        ...currentSettings,
+        ...patch
+      }
+    });
+  };
 
   const loadBuiltInCompanies = async () => {
     if (!settings.useBuiltInStaffingList) {
@@ -131,6 +143,12 @@
     return Array.from(uniqueCards).filter(looksLikeJobCard);
   };
 
+  const getBlocklistName = (card) => {
+    const company = getCompanyName(card);
+    const sourceSignals = window.DirectApplyMatcher.getSourceSignals(card.textContent);
+    return (sourceSignals[0] || company).replace(/^jobs?\s+via\s+/i, "").trim();
+  };
+
   const getDetails = () => {
     const detailsNodes = Array.from(document.querySelectorAll(DETAIL_SELECTOR));
 
@@ -173,12 +191,37 @@
     );
   };
 
+  const getReasonTag = (reason) => {
+    if (/^promoted/i.test(reason)) {
+      return "Promoted";
+    }
+
+    if (/^staffing company/i.test(reason)) {
+      return "Staffing";
+    }
+
+    if (/^blocked company/i.test(reason)) {
+      return "Blocked";
+    }
+
+    if (/^keyword/i.test(reason)) {
+      return "Keyword";
+    }
+
+    return "Filtered";
+  };
+
   const createPlaceholder = (card, reason) => {
     const placeholder = document.createElement("div");
     placeholder.className = "directapply-placeholder";
 
+    const tag = document.createElement("span");
+    tag.className = `directapply-reason-tag directapply-reason-tag--${getReasonTag(reason).toLowerCase()}`;
+    tag.textContent = getReasonTag(reason);
+
     const label = document.createElement("span");
-    label.textContent = `Hidden by DirectApply Filter: ${reason}`;
+    label.className = "directapply-placeholder-label";
+    label.textContent = reason;
 
     const button = document.createElement("button");
     button.type = "button";
@@ -189,8 +232,57 @@
       placeholder.remove();
     });
 
-    placeholder.append(label, button);
+    placeholder.append(tag, label, button);
     return placeholder;
+  };
+
+  const addBlockControl = (card) => {
+    if (!location.hostname.includes("linkedin.com") || card.querySelector(":scope > .directapply-card-tools")) {
+      return;
+    }
+
+    const company = getBlocklistName(card);
+    if (!company) {
+      return;
+    }
+
+    card.classList.add("directapply-actionable-job");
+
+    const tools = document.createElement("div");
+    tools.className = "directapply-card-tools";
+
+    const button = document.createElement("button");
+    button.className = "directapply-block-button";
+    button.type = "button";
+    button.textContent = "Block";
+    button.title = `Block ${company}`;
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const latestCompany = getBlocklistName(card) || company;
+      const customBlocklist = Array.from(new Set([...settings.customBlocklist, latestCompany]));
+
+      button.disabled = true;
+      button.textContent = "Blocked";
+      await saveSettings({ customBlocklist });
+      settings = {
+        ...settings,
+        customBlocklist
+      };
+      hideCard(card, `Blocked company: ${latestCompany}`);
+    });
+
+    tools.append(button);
+    card.append(tools);
+  };
+
+  const addBlockControls = (cards) => {
+    cards.forEach((card) => {
+      if (!card.classList.contains("directapply-hidden-job") && !card.classList.contains("directapply-hiding-job")) {
+        addBlockControl(card);
+      }
+    });
   };
 
   const hideCard = (card, reason) => {
@@ -232,15 +324,16 @@
       return;
     }
 
-    const result = await storageGet([SESSION_KEY]);
-    const stats = result[SESSION_KEY] || {};
-    const host = location.hostname;
-    const current = stats[host] || { hidden: 0, lastUpdated: null };
+    await ensureStatsKey();
+
+    const result = await storageGet([PAGE_STATS_KEY]);
+    const stats = result[PAGE_STATS_KEY] || {};
+    const current = stats[currentStatsKey] || { hidden: 0, lastUpdated: null };
 
     await storageSet({
-      [SESSION_KEY]: {
+      [PAGE_STATS_KEY]: {
         ...stats,
-        [host]: {
+        [currentStatsKey]: {
           hidden: current.hidden + hiddenCount,
           lastUpdated: new Date().toISOString()
         }
@@ -248,7 +341,38 @@
     });
   };
 
+  const resetCurrentStats = async () => {
+    currentStatsKey = window.DirectApplyMatcher.getStatsKey(location.href);
+
+    if (!currentStatsKey) {
+      return;
+    }
+
+    const result = await storageGet([PAGE_STATS_KEY]);
+    const stats = result[PAGE_STATS_KEY] || {};
+
+    await storageSet({
+      [PAGE_STATS_KEY]: {
+        ...stats,
+        [currentStatsKey]: {
+          hidden: 0,
+          lastUpdated: new Date().toISOString()
+        }
+      }
+    });
+  };
+
+  const ensureStatsKey = async () => {
+    const nextStatsKey = window.DirectApplyMatcher.getStatsKey(location.href);
+
+    if (nextStatsKey && nextStatsKey !== currentStatsKey) {
+      await resetCurrentStats();
+    }
+  };
+
   const scan = async () => {
+    await ensureStatsKey();
+
     if (!settings.enabled) {
       resetHiddenCards();
       return;
@@ -256,6 +380,8 @@
 
     const cards = getCards();
     let hiddenCount = 0;
+
+    addBlockControls(cards);
 
     for (const card of cards) {
       if (settings.hidePromotedJobs && isPromotedJob(card)) {
@@ -316,6 +442,7 @@
 
   const start = async () => {
     await loadSettings();
+    await resetCurrentStats();
     await scan();
 
     const observer = new MutationObserver(scheduleScan);
