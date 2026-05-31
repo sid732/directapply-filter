@@ -103,7 +103,7 @@
     }
   };
 
-  const findMatch = ({ companyName, text }, settings, builtInCompanies) => {
+  const findMatch = ({ companyName, text }, settings, builtInSources) => {
     const company = companyName || "";
     const allText = text || "";
     const companySignals = [company, ...getSourceSignals(allText)].filter(Boolean);
@@ -123,11 +123,11 @@
     }
 
     if (settings.useBuiltInStaffingList) {
-      const builtInMatch = builtInCompanies.find((entry) =>
+      const builtInMatch = builtInSources.find((entry) =>
         companySignals.some((signal) => containsPhrase(signal, entry))
       );
       if (builtInMatch) {
-        return { action: "hide", reason: `Staffing company: ${builtInMatch}` };
+        return { action: "hide", reason: `Blocked source: ${builtInMatch}` };
       }
     }
 

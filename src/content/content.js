@@ -41,7 +41,7 @@
   ]);
 
   let settings = window.DirectApplyMatcher.mergeSettings();
-  let builtInCompanies = [];
+  let builtInSources = [];
   let scanTimer = null;
   let hiddenCards = new WeakMap();
   let currentStatsKey = "";
@@ -67,18 +67,18 @@
     });
   };
 
-  const loadBuiltInCompanies = async () => {
+  const loadBuiltInSources = async () => {
     if (!settings.useBuiltInStaffingList) {
-      builtInCompanies = [];
+      builtInSources = [];
       return;
     }
 
     try {
-      const url = chrome.runtime.getURL("data/staffing_companies.json");
+      const url = chrome.runtime.getURL("data/blocked_sources.json");
       const response = await fetch(url);
-      builtInCompanies = await response.json();
+      builtInSources = await response.json();
     } catch (_error) {
-      builtInCompanies = [];
+      builtInSources = [];
     }
   };
 
@@ -196,8 +196,8 @@
       return "Promoted";
     }
 
-    if (/^staffing company/i.test(reason)) {
-      return "Staffing";
+    if (/^blocked source/i.test(reason)) {
+      return "Source";
     }
 
     if (/^blocked company/i.test(reason)) {
@@ -398,7 +398,7 @@
           text: card.textContent
         },
         settings,
-        builtInCompanies
+        builtInSources
       );
 
       if (match.action === "hide" && hideCard(card, match.reason)) {
@@ -418,7 +418,7 @@
           text: details.textContent
         },
         settings,
-        builtInCompanies
+        builtInSources
       );
 
       if (match.action === "hide") {
@@ -437,7 +437,7 @@
   const loadSettings = async () => {
     const result = await storageGet([STORAGE_KEY]);
     settings = window.DirectApplyMatcher.mergeSettings(result[STORAGE_KEY]);
-    await loadBuiltInCompanies();
+    await loadBuiltInSources();
   };
 
   const start = async () => {

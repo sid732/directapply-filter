@@ -2,24 +2,29 @@
   "manifest_version": 3,
   "name": "DirectApply Filter",
   "version": "0.1.0",
-  "description": "Hide staffing-agency job posts with local-only blocklists, whitelists, filters, and stats.",
+  "description": "Hide third-party job sources, promoted listings, and unwanted LinkedIn job posts.",
   "permissions": ["activeTab", "storage"],
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
   "action": {
     "default_title": "DirectApply Filter",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    },
     "default_popup": "src/popup/popup.html"
   },
   "options_page": "src/options/options.html",
   "content_scripts": [
     {
       "matches": [
-        "*://*.linkedin.com/jobs/*",
-        "*://*.indeed.com/*",
-        "*://*.glassdoor.com/*",
-        "*://*.ziprecruiter.com/*",
-        "*://*.monster.com/*",
-        "*://*.wellfound.com/*",
-        "*://*.dice.com/*",
-        "*://*.simplyhired.com/*"
+        "*://*.linkedin.com/jobs/*"
       ],
       "js": ["src/content/companyMatcher.js", "src/content/content.js"],
       "css": ["src/content/content.css"],
@@ -28,7 +33,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["data/staffing_companies.json"],
+      "resources": ["data/blocked_sources.json"],
       "matches": ["<all_urls>"]
     }
   ]
