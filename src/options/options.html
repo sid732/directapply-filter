@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DirectApply Filter Lists</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>DirectApply Filter</h1>
+        <p>Everything stays in Chrome storage on this device.</p>
+      </header>
+
+      <section class="grid">
+        <label class="field">
+          <span>Custom blocklist</span>
+          <textarea id="customBlocklist" spellcheck="false"></textarea>
+        </label>
+
+        <label class="field">
+          <span>Whitelist</span>
+          <textarea id="whitelist" spellcheck="false"></textarea>
+        </label>
+
+        <label class="field wide">
+          <span>Keyword filters</span>
+          <textarea id="keywordFilters" spellcheck="false"></textarea>
+        </label>
+      </section>
+
+      <div class="actions">
+        <button id="save" type="button">Save</button>
+        <button id="restoreDefaults" type="button">Restore defaults</button>
+        <span id="status" role="status"></span>
+      </div>
+    </main>
+    <script src="../content/companyMatcher.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

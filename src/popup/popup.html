@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DirectApply Filter</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>DirectApply</h1>
+          <p>Local job filter</p>
+        </div>
+        <label class="switch" title="Enable or disable filtering">
+          <input id="enabled" type="checkbox">
+          <span></span>
+        </label>
+      </header>
+
+      <section class="stats">
+        <span>Hidden on this site</span>
+        <strong id="hiddenCount">0</strong>
+      </section>
+
+      <label class="checkrow">
+        <input id="showHiddenPlaceholders" type="checkbox">
+        <span>Show placeholders</span>
+      </label>
+
+      <label class="checkrow">
+        <input id="useBuiltInStaffingList" type="checkbox">
+        <span>Use built-in staffing list</span>
+      </label>
+
+      <label class="checkrow">
+        <input id="hidePromotedJobs" type="checkbox">
+        <span>Hide promoted jobs</span>
+      </label>
+
+      <div class="actions">
+        <button id="openOptions" type="button">Lists</button>
+        <button id="resetStats" type="button">Reset count</button>
+      </div>
+    </main>
+    <script src="../content/companyMatcher.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

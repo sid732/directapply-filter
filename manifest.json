@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "DirectApply Filter",
+  "version": "0.1.0",
+  "description": "Hide staffing-agency job posts with local-only blocklists, whitelists, filters, and stats.",
+  "permissions": ["activeTab", "storage"],
+  "action": {
+    "default_title": "DirectApply Filter",
+    "default_popup": "src/popup/popup.html"
+  },
+  "options_page": "src/options/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.linkedin.com/jobs/*",
+        "*://*.indeed.com/*",
+        "*://*.glassdoor.com/*",
+        "*://*.ziprecruiter.com/*",
+        "*://*.monster.com/*",
+        "*://*.wellfound.com/*",
+        "*://*.dice.com/*",
+        "*://*.simplyhired.com/*"
+      ],
+      "js": ["src/content/companyMatcher.js", "src/content/content.js"],
+      "css": ["src/content/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["data/staffing_companies.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

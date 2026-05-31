@@ -1,0 +1,32 @@
+.directapply-hidden-job {
+  display: none !important;
+}
+
+.directapply-placeholder {
+  align-items: center;
+  background: #f7f8fa;
+  border: 1px solid #d6dbe1;
+  border-radius: 6px;
+  color: #334155;
+  display: flex;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  gap: 8px;
+  justify-content: space-between;
+  margin: 8px 0;
+  padding: 10px 12px;
+}
+
+.directapply-placeholder button {
+  appearance: none;
+  background: #ffffff;
+  border: 1px solid #b8c0cc;
+  border-radius: 4px;
+  color: #111827;
+  cursor: pointer;
+  font: inherit;
+  padding: 4px 8px;
+}
+
+.directapply-placeholder button:hover {
+  background: #eef2f7;
+}
