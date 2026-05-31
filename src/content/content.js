@@ -1,6 +1,7 @@
 (function () {
   const STORAGE_KEY = "directApplySettings";
   const SESSION_KEY = "directApplySessionStats";
+  const HIDE_ANIMATION_MS = 180;
   const CARD_SELECTOR = [
     "[data-job-id]",
     "[data-occludable-job-id]",
@@ -183,6 +184,7 @@
     button.type = "button";
     button.textContent = "Show";
     button.addEventListener("click", () => {
+      card.classList.remove("directapply-hiding-job");
       card.classList.remove("directapply-hidden-job");
       placeholder.remove();
     });
@@ -196,9 +198,14 @@
       return false;
     }
 
-    card.classList.add("directapply-hidden-job");
+    card.classList.add("directapply-hiding-job");
+    window.setTimeout(() => {
+      if (card.classList.contains("directapply-hiding-job")) {
+        card.classList.add("directapply-hidden-job");
+      }
+    }, HIDE_ANIMATION_MS);
 
-    if (settings.showHiddenPlaceholders) {
+    if (settings.showHiddenPlaceholders && !settings.vanishHiddenJobs) {
       const placeholder = createPlaceholder(card, reason);
       card.insertAdjacentElement("beforebegin", placeholder);
       hiddenCards.set(card, placeholder);
@@ -210,7 +217,8 @@
   };
 
   const resetHiddenCards = () => {
-    document.querySelectorAll(".directapply-hidden-job").forEach((card) => {
+    document.querySelectorAll(".directapply-hidden-job, .directapply-hiding-job").forEach((card) => {
+      card.classList.remove("directapply-hiding-job");
       card.classList.remove("directapply-hidden-job");
     });
 

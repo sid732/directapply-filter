@@ -3,6 +3,7 @@ const SESSION_KEY = "directApplySessionStats";
 
 const enabled = document.querySelector("#enabled");
 const showHiddenPlaceholders = document.querySelector("#showHiddenPlaceholders");
+const vanishHiddenJobs = document.querySelector("#vanishHiddenJobs");
 const useBuiltInStaffingList = document.querySelector("#useBuiltInStaffingList");
 const hidePromotedJobs = document.querySelector("#hidePromotedJobs");
 const hiddenCount = document.querySelector("#hiddenCount");
@@ -44,6 +45,8 @@ const render = async () => {
 
   enabled.checked = settings.enabled;
   showHiddenPlaceholders.checked = settings.showHiddenPlaceholders;
+  showHiddenPlaceholders.disabled = settings.vanishHiddenJobs;
+  vanishHiddenJobs.checked = settings.vanishHiddenJobs;
   useBuiltInStaffingList.checked = settings.useBuiltInStaffingList;
   hidePromotedJobs.checked = settings.hidePromotedJobs;
   hiddenCount.textContent = String(host && stats[host] ? stats[host].hidden : 0);
@@ -53,6 +56,7 @@ enabled.addEventListener("change", () => saveSettings({ enabled: enabled.checked
 showHiddenPlaceholders.addEventListener("change", () =>
   saveSettings({ showHiddenPlaceholders: showHiddenPlaceholders.checked })
 );
+vanishHiddenJobs.addEventListener("change", () => saveSettings({ vanishHiddenJobs: vanishHiddenJobs.checked }));
 useBuiltInStaffingList.addEventListener("change", () =>
   saveSettings({ useBuiltInStaffingList: useBuiltInStaffingList.checked })
 );

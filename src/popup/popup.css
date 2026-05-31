@@ -10,6 +10,7 @@ body {
 }
 
 .shell {
+  animation: directapply-popup-in 180ms ease both;
   display: grid;
   gap: 12px;
   padding: 14px;
@@ -56,7 +57,9 @@ p {
   border-radius: 999px;
   inset: 0;
   position: absolute;
-  transition: background 160ms ease;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .switch span::after {
@@ -74,6 +77,7 @@ p {
 
 .switch input:checked + span {
   background: #18745f;
+  box-shadow: 0 0 0 3px rgba(24, 116, 95, 0.14);
 }
 
 .switch input:checked + span::after {
@@ -88,6 +92,14 @@ p {
   display: flex;
   justify-content: space-between;
   padding: 12px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.stats:hover {
+  border-color: #c6d0dc;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .stats span {
@@ -106,6 +118,11 @@ p {
   display: flex;
   font-size: 13px;
   gap: 8px;
+  transition: opacity 160ms ease;
+}
+
+.checkrow:has(input:disabled) {
+  opacity: 0.55;
 }
 
 .actions {
@@ -123,8 +140,41 @@ button {
   cursor: pointer;
   font: inherit;
   padding: 9px 10px;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 120ms ease;
 }
 
 button:hover {
   background: #eef2f7;
+  border-color: #94a3b8;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+@keyframes directapply-popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+  }
 }

@@ -9,6 +9,7 @@ DirectApply Filter helps job seekers keep search results focused on roles worth 
 - Supports custom blocklists for companies and job sources you want to avoid.
 - Includes a whitelist for employers that should always stay visible.
 - Adds optional placeholders so hidden results can be reviewed or restored.
+- Offers a vanish mode for removing hidden results without placeholder rows.
 - Tracks how many jobs were hidden on each site.
 - Keeps preferences on your device.
 
@@ -38,6 +39,7 @@ Your blocklists, whitelist, toggles, and hidden-job counts stay in Chrome storag
 
 - **Enable filter**: Turn all filtering on or off.
 - **Show placeholders**: Keep a visible marker where a job was hidden.
+- **Vanish hidden jobs**: Remove hidden jobs without placeholder rows or Show buttons.
 - **Use built-in staffing list**: Apply the included staffing-company filter.
 - **Hide promoted jobs**: Remove promoted LinkedIn listings.
 - **Lists**: Manage custom blocklist, whitelist, and keyword filters.

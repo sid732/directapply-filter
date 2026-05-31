@@ -2,6 +2,7 @@
   const DEFAULT_SETTINGS = {
     enabled: true,
     showHiddenPlaceholders: true,
+    vanishHiddenJobs: false,
     useBuiltInStaffingList: true,
     hidePromotedJobs: true,
     customBlocklist: [],
