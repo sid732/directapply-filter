@@ -1,0 +1,107 @@
+name: Chrome Web Store
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Upload and submit the package to the Chrome Web Store"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate extension
+        run: bash scripts/check-extension.sh
+
+  package:
+    name: Package extension
+    runs-on: ubuntu-latest
+    needs: ci
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build Chrome Web Store zip
+        run: bash scripts/package-extension.sh
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-package
+          path: dist/*.zip
+          if-no-files-found: error
+
+  publish:
+    name: Publish to Chrome Web Store
+    runs-on: ubuntu-latest
+    needs: package
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: chrome-extension-package
+          path: dist
+
+      - name: Request access token
+        env:
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          curl -sS \
+            -d client_id="$CHROME_CLIENT_ID" \
+            -d client_secret="$CHROME_CLIENT_SECRET" \
+            -d refresh_token="$CHROME_REFRESH_TOKEN" \
+            -d grant_type=refresh_token \
+            https://oauth2.googleapis.com/token > token.json
+          node -e "const fs=require('fs'); const token=JSON.parse(fs.readFileSync('token.json','utf8')).access_token; if (!token) throw new Error('No access_token in OAuth response'); fs.appendFileSync(process.env.GITHUB_ENV, 'CHROME_ACCESS_TOKEN=' + token + '\n');"
+
+      - name: Upload package
+        env:
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+        run: |
+          PACKAGE="$(ls dist/*.zip | head -n 1)"
+          curl -sS -f \
+            -H "Authorization: Bearer $CHROME_ACCESS_TOKEN" \
+            -X POST \
+            -T "$PACKAGE" \
+            "https://chromewebstore.googleapis.com/upload/v2/publishers/${CHROME_PUBLISHER_ID}/items/${CHROME_EXTENSION_ID}:upload"
+
+      - name: Submit for review
+        env:
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+        run: |
+          curl -sS -f \
+            -H "Authorization: Bearer $CHROME_ACCESS_TOKEN" \
+            -X POST \
+            "https://chromewebstore.googleapis.com/v2/publishers/${CHROME_PUBLISHER_ID}/items/${CHROME_EXTENSION_ID}:publish"
