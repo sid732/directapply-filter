@@ -12,6 +12,7 @@ mkdir -p dist
 
 zip -r "dist/${PACKAGE_NAME}" \
   manifest.json \
+  LICENSE \
   README.md \
   assets \
   data \

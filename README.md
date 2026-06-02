@@ -29,6 +29,10 @@ LinkedIn support includes source filters, custom blocklists, whitelists, hidden-
 
 Your blocklists, whitelist, toggles, and hidden-job counts stay in Chrome storage on your device. DirectApply does not require an account, analytics, or a remote service.
 
+## License
+
+DirectApply Filter is released under the MIT License. See [LICENSE](LICENSE).
+
 ## Installation
 
 1. Open Chrome and go to `chrome://extensions`.
