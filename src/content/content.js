@@ -1,4 +1,10 @@
 (function () {
+  if (window.__directApplyContentLoaded) {
+    return;
+  }
+
+  window.__directApplyContentLoaded = true;
+
   const STORAGE_KEY = "directApplySettings";
   const PAGE_STATS_KEY = "directApplyPageStats";
   const HIDE_ANIMATION_MS = 180;
@@ -45,6 +51,17 @@
   let scanTimer = null;
   let hiddenCards = new WeakMap();
   let currentStatsKey = "";
+  let lastAutoSelectedJob = "";
+
+  const isLinkedInPage = () => location.hostname.includes("linkedin.com");
+  const getLinkedInPathname = () => {
+    try {
+      return window.top.location.pathname;
+    } catch (_error) {
+      return location.pathname;
+    }
+  };
+  const isLinkedInJobsPage = () => isLinkedInPage() && getLinkedInPathname().startsWith("/jobs");
 
   const storageGet = (keys) =>
     new Promise((resolve) => {
@@ -122,7 +139,7 @@
   };
 
   const getCardRoot = (card) => {
-    if (location.hostname.includes("linkedin.com")) {
+    if (isLinkedInPage()) {
       const linkedInRow = card.closest(LINKEDIN_ROW_SELECTOR);
 
       if (linkedInRow) {
@@ -169,7 +186,7 @@
       .filter(Boolean);
 
   const isPromotedJob = (node) => {
-    if (!location.hostname.includes("linkedin.com")) {
+    if (!isLinkedInPage()) {
       return false;
     }
 
@@ -237,7 +254,7 @@
   };
 
   const addBlockControl = (card) => {
-    if (!location.hostname.includes("linkedin.com") || card.querySelector(":scope > .directapply-card-tools")) {
+    if (!isLinkedInJobsPage() || card.querySelector(":scope > .directapply-card-tools")) {
       return;
     }
 
@@ -317,6 +334,10 @@
     document.querySelectorAll(".directapply-placeholder").forEach((node) => {
       node.remove();
     });
+
+    document.querySelectorAll(".directapply-filtered-details").forEach((node) => {
+      node.classList.remove("directapply-filtered-details");
+    });
   };
 
   const recordStats = async (hiddenCount) => {
@@ -370,7 +391,67 @@
     }
   };
 
+  const getCardJobKey = (card) => {
+    const jobId = card.getAttribute("data-occludable-job-id") || card.getAttribute("data-job-id");
+    if (jobId) {
+      return jobId;
+    }
+
+    const link = card.querySelector("a[href*='currentJobId='], a[href*='/jobs/view/']");
+    return link ? link.href : card.textContent.replace(/\s+/g, " ").trim().slice(0, 180);
+  };
+
+  const getVisibleCards = (cards) =>
+    cards.filter((card) => !card.classList.contains("directapply-hidden-job") && !card.classList.contains("directapply-hiding-job"));
+
+  const openCard = (card) => {
+    const target = card.querySelector("a[href*='currentJobId='], a[href*='/jobs/view/'], a[href*='/jobs/']") || card;
+
+    target.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      })
+    );
+  };
+
+  const handleFilteredDetails = (cards) => {
+    const filteredDetails = getDetails().filter((details) => settings.hidePromotedJobs && isPromotedJob(details));
+
+    if (!filteredDetails.length) {
+      document.querySelectorAll(".directapply-filtered-details").forEach((node) => {
+        node.classList.remove("directapply-filtered-details");
+      });
+      return;
+    }
+
+    const [nextCard] = getVisibleCards(cards);
+
+    if (nextCard) {
+      const nextJobKey = getCardJobKey(nextCard);
+
+      if (nextJobKey && nextJobKey !== lastAutoSelectedJob) {
+        lastAutoSelectedJob = nextJobKey;
+        openCard(nextCard);
+        window.setTimeout(scheduleScan, 350);
+      }
+
+      return;
+    }
+
+    filteredDetails.forEach((details) => {
+      details.classList.add("directapply-filtered-details");
+    });
+  };
+
   const scan = async () => {
+    if (isLinkedInPage() && !isLinkedInJobsPage()) {
+      resetHiddenCards();
+      hiddenCards = new WeakMap();
+      return;
+    }
+
     await ensureStatsKey();
 
     if (!settings.enabled) {
@@ -406,32 +487,35 @@
       }
     }
 
-    for (const details of getDetails()) {
-      if (settings.hidePromotedJobs && isPromotedJob(details)) {
-        hideCard(details, "Promoted job");
-        continue;
-      }
-
-      const match = window.DirectApplyMatcher.findMatch(
-        {
-          companyName: getCompanyName(details),
-          text: details.textContent
-        },
-        settings,
-        builtInSources
-      );
-
-      if (match.action === "hide") {
-        hideCard(details, match.reason);
-      }
-    }
-
+    handleFilteredDetails(cards);
     await recordStats(hiddenCount);
   };
 
   const scheduleScan = () => {
     window.clearTimeout(scanTimer);
     scanTimer = window.setTimeout(scan, 250);
+  };
+
+  const watchLocationChanges = () => {
+    let lastUrl = location.href;
+    let lastPathname = getLinkedInPathname();
+
+    const checkUrl = () => {
+      const nextPathname = getLinkedInPathname();
+
+      if (location.href === lastUrl && nextPathname === lastPathname) {
+        return;
+      }
+
+      lastUrl = location.href;
+      lastPathname = nextPathname;
+      resetHiddenCards();
+      hiddenCards = new WeakMap();
+      scheduleScan();
+    };
+
+    window.addEventListener("popstate", checkUrl);
+    return checkUrl;
   };
 
   const loadSettings = async () => {
@@ -442,10 +526,16 @@
 
   const start = async () => {
     await loadSettings();
-    await resetCurrentStats();
     await scan();
+    const checkLocationChange = watchLocationChanges();
 
-    const observer = new MutationObserver(scheduleScan);
+    const observer = new MutationObserver(() => {
+      checkLocationChange();
+
+      if (isLinkedInJobsPage()) {
+        scheduleScan();
+      }
+    });
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true

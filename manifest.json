@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DirectApply Filter",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Hide third-party job sources, promoted listings, and unwanted LinkedIn job posts.",
   "permissions": ["activeTab", "storage"],
   "icons": {
@@ -24,10 +24,11 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.linkedin.com/jobs/*"
+        "*://*.linkedin.com/*"
       ],
       "js": ["src/content/companyMatcher.js", "src/content/content.js"],
       "css": ["src/content/content.css"],
+      "all_frames": true,
       "run_at": "document_idle"
     }
   ],

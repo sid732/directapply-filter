@@ -69,6 +69,10 @@
   display: none !important;
 }
 
+.directapply-filtered-details {
+  visibility: hidden !important;
+}
+
 .directapply-placeholder {
   align-items: center;
   animation: directapply-placeholder-in 180ms ease both;
